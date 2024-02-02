@@ -112,27 +112,31 @@ fn launch_producer(
     bar: &Option<ProgressBar>,
 ) {
     let c_bar = bar.clone();
-    let c_stopped = Arc::clone(&stopped);
-    thread::spawn(move || {
-        for record in csv::ReaderBuilder::new()
-            .has_headers(!no_header)
-            .from_reader(index_file)
-            .records()
-        {
-            abort::break_on_flag!(c_stopped, "Shutting down the producer...");
-            match record {
-                Ok(record) => {
-                    work_tx.send(record).unwrap();
-                }
-                Err(e) => {
-                    if let Some(c_bar) = &c_bar {
-                        c_bar.inc(1);
+    let c_stopped = Arc::clone(stopped);
+    thread::Builder::new()
+        .name("producer".to_string())
+        .stack_size(4 * 1024 * 1024)
+        .spawn(move || {
+            for record in csv::ReaderBuilder::new()
+                .has_headers(!no_header)
+                .from_reader(index_file)
+                .records()
+            {
+                abort::break_on_flag!(c_stopped, "Shutting down the producer...");
+                match record {
+                    Ok(record) => {
+                        work_tx.send(record).unwrap();
                     }
-                    warn!("Error reading record: {}", e);
-                }
-            };
-        }
-    });
+                    Err(e) => {
+                        if let Some(c_bar) = &c_bar {
+                            c_bar.inc(1);
+                        }
+                        warn!("Error reading record: {}", e);
+                    }
+                };
+            }
+        })
+        .unwrap();
 }
 
 fn launch_workers(
@@ -144,17 +148,21 @@ fn launch_workers(
     bar: &Option<ProgressBar>,
 ) {
     thread::scope(|s| {
-        for _ in 0..worker_count {
-            s.spawn(move || {
-                while let Ok(record) = work_rx.recv() {
-                    if let Err(err) = crawl::get(&record, &options, &stopped, &saving) {
-                        warn!("{}", err);
+        for i in 0..worker_count {
+            thread::Builder::new()
+                .name(format!("worker{}", i))
+                .stack_size(4 * 1024 * 1024)
+                .spawn_scoped(s, move || {
+                    while let Ok(record) = work_rx.recv() {
+                        if let Err(err) = crawl::get(&record, options, stopped, saving) {
+                            warn!("{}", err);
+                        }
+                        if let Some(bar) = &bar {
+                            bar.inc(1);
+                        }
                     }
-                    if let Some(bar) = &bar {
-                        bar.inc(1);
-                    }
-                }
-            });
+                })
+                .unwrap();
         }
     });
 }
