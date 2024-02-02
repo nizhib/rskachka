@@ -72,24 +72,22 @@ fn calculate_index_size(file_path: &str, no_header: bool) -> Result<usize> {
 }
 
 fn create_progress_bar(progress: bool, index_size: usize) -> Option<ProgressBar> {
-    let bar: Option<ProgressBar>;
     if progress {
-        bar = Some(
+        Some(
             ProgressBar::new(index_size as u64)
                 .with_style(
                     ProgressStyle::with_template(BAR_TEMPLATE)
                         .unwrap()
                         .progress_chars("##-")
                         .with_key("my_per_sec", |s: &ProgressState, w: &mut dyn Write| {
-                            write!(w, "{:.02}/s", s.per_sec()).unwrap()
+                            write!(w, "{:.02}it/s", s.per_sec()).unwrap()
                         }),
                 )
                 .with_finish(ProgressFinish::AndLeave),
-        );
+        )
     } else {
-        bar = None;
+        None
     }
-    bar
 }
 
 fn set_ctrl_c_handler(stopped: &Arc<Mutex<bool>>, saving: &Arc<SavingSemaphore>) {
@@ -182,11 +180,11 @@ fn main() -> Result<()> {
     let stopped = Arc::new(Mutex::new(false));
     let saving = Arc::new(SavingSemaphore::new());
 
-    // Gracefully shutdown on Ctrl-C
-    set_ctrl_c_handler(&stopped, &saving);
-
     // Create a progressbar
     let bar = create_progress_bar(args.progress, index_size);
+
+    // Gracefully shutdown on Ctrl-C
+    set_ctrl_c_handler(&stopped, &saving);
 
     // Launch the producer
     launch_producer(index_file, args.no_header, work_tx, &stopped, &bar);
