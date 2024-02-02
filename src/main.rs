@@ -1,5 +1,5 @@
 mod abort;
-mod arg;
+mod args;
 mod crawl;
 mod processing;
 mod saving;
@@ -19,15 +19,15 @@ use crossbeam::channel::{bounded, Receiver, Sender};
 use indicatif::{ProgressBar, ProgressFinish, ProgressState, ProgressStyle};
 use log::{info, warn, Level};
 
-use crate::arg::Arg;
+use crate::args::Args;
 use crate::crawl::CrawlOptions;
 use crate::saving::SavingSemaphore;
 
 const BAR_TEMPLATE: &str =
     "{percent:>3}% |{wide_bar}| {human_pos}/{human_len} [{elapsed}<{eta}, {my_per_sec}]";
 
-fn parse_args() -> Result<Arg> {
-    let args = Arg::parse();
+fn parse_args() -> Result<Args> {
+    let args = Args::parse();
     if args.progress && args.verbose.log_level().unwrap_or(Level::Error) > Level::Warn {
         Err(std::io::Error::new(
             std::io::ErrorKind::Other,
@@ -172,10 +172,10 @@ fn main() -> Result<()> {
     let options = Arc::new(CrawlOptions::from_args(&args));
 
     // Calculate the index size
-    let index_size = calculate_index_size(&args.file_path, args.no_header)?;
+    let index_size = calculate_index_size(&args.index_path, args.no_header)?;
 
     // Reopen the index file
-    let index_file = open_index_file(&args.file_path)?;
+    let index_file = open_index_file(&args.index_path)?;
 
     // Set up the communication
     let (work_tx, work_rx) = bounded::<csv::StringRecord>(args.worker_count);

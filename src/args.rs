@@ -2,28 +2,29 @@ use clap::Parser;
 use clap_verbosity_flag::{Verbosity, WarnLevel};
 
 #[derive(Parser, Debug)]
-pub struct Arg {
+#[command(about)]
+pub struct Args {
     /// Index file path
     #[arg(short, long)]
-    pub file_path: String,
+    pub index_path: String,
 
-    /// Images output root
+    /// Output images root
     #[arg(short, long)]
     pub output_root: String,
 
     /// ID fields
-    #[arg(short, long, default_value_t = String::from("0"))]
-    pub id_fields: String,
+    #[arg(short, long, value_delimiter = ',', default_values_t = [0])]
+    pub fields: Vec<i8>,
 
     /// URL field
     #[arg(short, long, default_value_t = -1)]
     pub url_field: i8,
 
-    /// Output images quality
+    /// Output images jpeg quality
     #[arg(short, long, default_value_t = 90)]
     pub jpeg_quality: u8,
 
-    /// Output image size limit
+    /// Output images max size
     #[arg(short, long, default_value_t = 640)]
     pub max_size: u32,
 
@@ -43,7 +44,7 @@ pub struct Arg {
     #[arg(short, long)]
     pub progress: bool,
 
-    /// CSV file has no header
+    /// No header in index
     #[arg(short, long)]
     pub no_header: bool,
 }

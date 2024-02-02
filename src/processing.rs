@@ -39,12 +39,12 @@ fn remove_transparency(image: &mut RgbaImage) {
 }
 
 fn save_image(image: &RgbaImage, path: &Path, jpeg_quality: u8) -> Result<(), ProcessingError> {
-    let file = fs::File::create(path).map_err(|e| ProcessingError::Io(e))?;
+    let file = fs::File::create(path).map_err(ProcessingError::Io)?;
 
     let mut writer = BufWriter::new(file);
     image
         .write_to(&mut writer, ImageOutputFormat::Jpeg(jpeg_quality))
-        .map_err(|e| ProcessingError::Image(e))
+        .map_err(ProcessingError::Image)
 }
 
 pub fn save_from_bytes(
@@ -57,7 +57,7 @@ pub fn save_from_bytes(
 ) -> Result<(), ProcessingError> {
     abort::return_on_flag!(stopped, "Stopping the worker...");
     let mut image = image::load_from_memory(bytes)
-        .map_err(|e| ProcessingError::Image(e))?
+        .map_err(ProcessingError::Image)?
         .to_rgba8();
 
     abort::return_on_flag!(stopped, "Stopping the worker...");

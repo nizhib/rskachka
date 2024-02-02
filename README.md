@@ -11,20 +11,20 @@ cargo install --git https://github.com/nizhib/rskachka
 ## Usage
 
 ```text
-Usage: rskachka [OPTIONS] --file-path <FILE_PATH> --output-root <OUTPUT_ROOT>
+Usage: rskachka [OPTIONS] -i <INDEX_PATH> -o <OUTPUT_ROOT>
 
 Options:
-  -f, --file-path <FILE_PATH>        Index file path
-  -o, --output-root <OUTPUT_ROOT>    Images output root
-  -i, --id-fields <ID_FIELDS>        ID fields [default: 0]
+  -i, --index-path <INDEX_PATH>      Index file path
+  -o, --output-root <OUTPUT_ROOT>    Output images root
+  -f, --fields <FIELDS>              ID fields [default: 0]
   -u, --url-field <URL_FIELD>        URL field [default: -1]
-  -j, --jpeg-quality <JPEG_QUALITY>  Output images quality [default: 90]
-  -m, --max-size <MAX_SIZE>          Output image size limit [default: 640]
+  -j, --jpeg-quality <JPEG_QUALITY>  Output images jpeg quality [default: 90]
+  -m, --max-size <MAX_SIZE>          Output images max size [default: 640]
   -w, --worker-count <WORKER_COUNT>  Concurrent workers [default: 32]
   -r, --resume                       Resume last run if any
   -v, --verbose...                   Increase logging verbosity
   -q, --quiet...                     Decrease logging verbosity
   -p, --progress                     Show progressbar
-  -n, --no-header                    CSV file has no header
+  -n, --no-header                    No header in index
   -h, --help                         Print help
 ```
