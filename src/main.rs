@@ -91,8 +91,8 @@ fn create_progress_bar(progress: bool, index_size: usize) -> Option<ProgressBar>
 }
 
 fn set_ctrl_c_handler(stopped: &Arc<Mutex<bool>>, saving: &Arc<SavingSemaphore>) {
-    let c_stopped = Arc::clone(&stopped);
-    let c_saving = Arc::clone(&saving);
+    let c_stopped = Arc::clone(stopped);
+    let c_saving = Arc::clone(saving);
     ctrlc::set_handler(move || {
         info!("Shutting down...");
         let mut is_stopped = c_stopped.lock().unwrap();
