@@ -38,7 +38,7 @@ fn parse_args() -> Result<Args> {
     }
 }
 
-fn set_log_level<T: LogLevel>(verbose: &Verbosity<T>) {
+fn init_logging<T: LogLevel>(verbose: &Verbosity<T>) {
     env_logger::Builder::new()
         .filter_level(verbose.log_level_filter())
         .init();
@@ -166,7 +166,7 @@ fn main() -> Result<()> {
     let args = parse_args()?;
 
     // Set the log level
-    set_log_level(&args.verbose);
+    init_logging(&args.verbose);
 
     // Compile the options
     let options = Arc::new(CrawlOptions::from_args(&args));

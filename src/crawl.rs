@@ -151,7 +151,7 @@ pub fn get(
 
     // Process the image and save
     abort::return_on_flag!(stopped, "Stopping the worker...");
-    processing::save_from_bytes(
+    processing::save_bytes_as_image(
         &bytes,
         &path,
         options.max_size,

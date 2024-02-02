@@ -47,7 +47,7 @@ fn save_image(image: &RgbaImage, path: &Path, jpeg_quality: u8) -> Result<(), Pr
         .map_err(ProcessingError::Image)
 }
 
-pub fn save_from_bytes(
+pub fn save_bytes_as_image(
     bytes: &[u8],
     path: &Path,
     max_size: u32,
