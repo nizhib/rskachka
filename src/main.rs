@@ -9,7 +9,10 @@ use std::{
     fs::File,
     io::{BufRead, BufReader, Result},
     process,
-    sync::{Arc, Mutex},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
     thread,
 };
 
@@ -90,15 +93,14 @@ fn create_progress_bar(progress: bool, index_size: usize) -> Option<ProgressBar>
     }
 }
 
-fn set_ctrl_c_handler(stopped: &Arc<Mutex<bool>>, saving: &Arc<SavingSemaphore>) {
+fn set_ctrl_c_handler(stopped: &Arc<AtomicBool>, saving: &Arc<SavingSemaphore>) {
     let c_stopped = Arc::clone(stopped);
     let c_saving = Arc::clone(saving);
     ctrlc::set_handler(move || {
-        info!("Shutting down...");
-        let mut is_stopped = c_stopped.lock().unwrap();
-        *is_stopped = true;
-        drop(is_stopped);
+        warn!("Waiting for the workers to shut down...");
+        c_stopped.store(true, Ordering::Relaxed);
         c_saving.wait();
+        warn!("Done!");
         process::exit(0);
     })
     .expect("Error setting Ctrl-C handler");
@@ -108,7 +110,7 @@ fn launch_producer(
     index_file: File,
     no_header: bool,
     work_tx: Sender<csv::StringRecord>,
-    stopped: &Arc<Mutex<bool>>,
+    stopped: &Arc<AtomicBool>,
     bar: &Option<ProgressBar>,
 ) {
     let c_bar = bar.clone();
@@ -143,7 +145,7 @@ fn launch_workers(
     worker_count: usize,
     work_rx: &Receiver<csv::StringRecord>,
     options: &Arc<CrawlOptions>,
-    stopped: &Arc<Mutex<bool>>,
+    stopped: &Arc<AtomicBool>,
     saving: &Arc<SavingSemaphore>,
     bar: &Option<ProgressBar>,
 ) {
@@ -185,7 +187,7 @@ fn main() -> Result<()> {
 
     // Set up the communication
     let (work_tx, work_rx) = bounded::<csv::StringRecord>(args.worker_count);
-    let stopped = Arc::new(Mutex::new(false));
+    let stopped = Arc::new(AtomicBool::new(false));
     let saving = Arc::new(SavingSemaphore::new());
 
     // Create a progressbar

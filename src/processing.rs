@@ -1,4 +1,10 @@
-use std::{cmp::max, fs, io, io::BufWriter, path::Path, sync::Mutex};
+use std::{
+    cmp::max,
+    fs,
+    io::{self, BufWriter},
+    path::Path,
+    sync::atomic::AtomicBool,
+};
 
 use image::{ImageOutputFormat, RgbaImage};
 use thiserror::Error;
@@ -52,21 +58,21 @@ pub fn save_bytes_as_image(
     path: &Path,
     max_size: u32,
     jpeg_quality: u8,
-    stopped: &Mutex<bool>,
+    stopped: &AtomicBool,
     saving: &SavingSemaphore,
 ) -> Result<(), ProcessingError> {
-    abort::return_on_flag!(stopped, "Stopping the worker...");
+    abort::return_on_flag!(stopped, "Shutting down...");
     let mut image = image::load_from_memory(bytes)
         .map_err(ProcessingError::Image)?
         .to_rgba8();
 
-    abort::return_on_flag!(stopped, "Stopping the worker...");
+    abort::return_on_flag!(stopped, "Shutting down...");
     remove_transparency(&mut image);
     if max(image.width(), image.height()) > max_size {
         image = thumbnail(&image, max_size);
     }
 
-    abort::return_on_flag!(stopped, "Stopping the worker...");
+    abort::return_on_flag!(stopped, "Shutting down...");
     saving.increment();
     let saved = save_image(&image, path, jpeg_quality);
     saving.decrement();

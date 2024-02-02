@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf, sync::Mutex};
+use std::{fs, path::PathBuf, sync::atomic::AtomicBool};
 
 use log::info;
 use thiserror::Error;
@@ -124,7 +124,7 @@ fn fetch(url: &str) -> Result<Vec<u8>, CrawlError> {
 pub fn get(
     record: &csv::StringRecord,
     options: &CrawlOptions,
-    stopped: &Mutex<bool>,
+    stopped: &AtomicBool,
     saving: &SavingSemaphore,
 ) -> Result<(), CrawlError> {
     // Extract the record fields
@@ -135,7 +135,7 @@ pub fn get(
 
     // Finish if we are resuming and the file exists
     if path.exists() && options.resume {
-        info!("Skipping previously processed {}", item.url);
+        info!("Skipping {}", item.url);
         return Ok(());
     }
 
@@ -146,11 +146,11 @@ pub fn get(
     .map_err(CrawlError::IO)?;
 
     // Fetch the image as bytes
-    abort::return_on_flag!(stopped, "Stopping the worker...");
+    abort::return_on_flag!(stopped, "Shutting down...");
     let bytes = fetch(&item.url)?;
 
     // Process the image and save
-    abort::return_on_flag!(stopped, "Stopping the worker...");
+    abort::return_on_flag!(stopped, "Shutting down...");
     processing::save_bytes_as_image(
         &bytes,
         &path,
@@ -160,4 +160,5 @@ pub fn get(
         saving,
     )
     .map_err(CrawlError::ImageProcessing)
+    .map(|_| info!("Saved {}", item.url))
 }

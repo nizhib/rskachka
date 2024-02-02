@@ -1,16 +1,14 @@
 macro_rules! break_on_flag {
-    ($mutex:expr, $message:expr) => {{
-        let is_flagged = $mutex.lock().unwrap();
-        if *is_flagged {
+    ($atomic:expr, $message:expr) => {{
+        if $atomic.load(std::sync::atomic::Ordering::Relaxed) {
             log::info!($message);
             break;
         }
     }};
 }
 macro_rules! return_on_flag {
-    ($mutex:expr, $message:expr) => {{
-        let is_flagged = $mutex.lock().unwrap();
-        if *is_flagged {
+    ($atomic:expr, $message:expr) => {{
+        if $atomic.load(std::sync::atomic::Ordering::Relaxed) {
             log::info!($message);
             return Ok(());
         }
