@@ -1,14 +1,14 @@
-# rskachka
+# 🦀🏋️ rskachka
 
-Download images _**blazingly fast ©**_.
+Download images **blazingly fast**.
 
-## Installation
+## 🏗️ Installation
 
 ```bash
 cargo install --git https://github.com/nizhib/rskachka
 ```
 
-## Usage
+## 🚀 Usage
 
 ```text
 Usage: rskachka [OPTIONS] -i <INDEX_PATH> -o <OUTPUT_ROOT>
