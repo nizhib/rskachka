@@ -1,15 +1,17 @@
 macro_rules! break_on_flag {
-    ($atomic:expr, $message:expr) => {{
+    ($atomic:expr, $closure:expr) => {{
         if $atomic.load(std::sync::atomic::Ordering::Relaxed) {
-            log::info!($message);
+            #[allow(clippy::redundant_closure_call)]
+            $closure();
             break;
         }
     }};
 }
 macro_rules! return_on_flag {
-    ($atomic:expr, $message:expr) => {{
+    ($atomic:expr, $closure:expr) => {{
         if $atomic.load(std::sync::atomic::Ordering::Relaxed) {
-            log::info!($message);
+            #[allow(clippy::redundant_closure_call)]
+            $closure();
             return Ok(());
         }
     }};

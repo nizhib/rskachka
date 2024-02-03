@@ -1,8 +1,10 @@
 mod abort;
 mod args;
-mod crawl;
-mod processing;
+mod fetch;
+mod images;
+mod item;
 mod saving;
+mod worker;
 
 use std::{
     fmt::Write,
@@ -22,9 +24,10 @@ use crossbeam::channel::{bounded, Receiver, Sender};
 use indicatif::{ProgressBar, ProgressFinish, ProgressState, ProgressStyle};
 use log::{info, warn, Level};
 
+use crate::abort::break_on_flag;
 use crate::args::Args;
-use crate::crawl::CrawlOptions;
 use crate::saving::SavingSemaphore;
+use crate::worker::ProcessOptions;
 
 const BAR_TEMPLATE: &str =
     "{percent:>3}% |{wide_bar}| {human_pos}/{human_len} [{elapsed}<{eta}, {my_per_sec}]";
@@ -74,7 +77,7 @@ fn calculate_index_size(file_path: &str, no_header: bool) -> Result<usize> {
     Ok(index_size)
 }
 
-fn create_progress_bar(progress: bool, index_size: usize) -> Option<ProgressBar> {
+fn create_progressbar(progress: bool, index_size: usize) -> Option<ProgressBar> {
     if progress {
         Some(
             ProgressBar::new(index_size as u64)
@@ -111,9 +114,9 @@ fn launch_producer(
     no_header: bool,
     work_tx: Sender<csv::StringRecord>,
     stopped: &Arc<AtomicBool>,
-    bar: &Option<ProgressBar>,
+    pb: &Option<ProgressBar>,
 ) {
-    let c_bar = bar.clone();
+    let c_pb = pb.clone();
     let c_stopped = Arc::clone(stopped);
     thread::Builder::new()
         .name("producer".to_string())
@@ -124,14 +127,14 @@ fn launch_producer(
                 .from_reader(index_file)
                 .records()
             {
-                abort::break_on_flag!(c_stopped, "Shutting down the producer...");
+                break_on_flag!(c_stopped, || warn!("Shutting down the producer..."));
                 match record {
                     Ok(record) => {
                         work_tx.send(record).unwrap();
                     }
                     Err(e) => {
-                        if let Some(c_bar) = &c_bar {
-                            c_bar.inc(1);
+                        if let Some(c_pb) = &c_pb {
+                            c_pb.inc(1);
                         }
                         warn!("Error reading record: {}", e);
                     }
@@ -144,10 +147,10 @@ fn launch_producer(
 fn launch_workers(
     worker_count: usize,
     work_rx: &Receiver<csv::StringRecord>,
-    options: &Arc<CrawlOptions>,
+    options: &ProcessOptions,
     stopped: &Arc<AtomicBool>,
     saving: &Arc<SavingSemaphore>,
-    bar: &Option<ProgressBar>,
+    pb: &Option<ProgressBar>,
 ) {
     thread::scope(|s| {
         for i in 0..worker_count {
@@ -156,11 +159,11 @@ fn launch_workers(
                 .stack_size(4 * 1024 * 1024)
                 .spawn_scoped(s, move || {
                     while let Ok(record) = work_rx.recv() {
-                        if let Err(err) = crawl::get(&record, options, stopped, saving) {
+                        if let Err(err) = worker::process(&record, options, stopped, saving) {
                             warn!("{}", err);
                         }
-                        if let Some(bar) = &bar {
-                            bar.inc(1);
+                        if let Some(pb) = &pb {
+                            pb.inc(1);
                         }
                     }
                 })
@@ -176,9 +179,6 @@ fn main() -> Result<()> {
     // Set the log level
     init_logging(&args.verbose);
 
-    // Compile the options
-    let options = Arc::new(CrawlOptions::from_args(&args));
-
     // Calculate the index size
     let index_size = calculate_index_size(&args.index_path, args.no_header)?;
 
@@ -191,22 +191,22 @@ fn main() -> Result<()> {
     let saving = Arc::new(SavingSemaphore::new());
 
     // Create a progressbar
-    let bar = create_progress_bar(args.progress, index_size);
+    let pb = create_progressbar(args.progress, index_size);
 
     // Gracefully shutdown on Ctrl-C
     set_ctrl_c_handler(&stopped, &saving);
 
     // Launch the producer
-    launch_producer(index_file, args.no_header, work_tx, &stopped, &bar);
+    launch_producer(index_file, args.no_header, work_tx, &stopped, &pb);
 
     // Launch the workers
     launch_workers(
         args.worker_count,
         &work_rx,
-        &options,
+        &args.into(),
         &stopped,
         &saving,
-        &bar,
+        &pb,
     );
 
     Ok(())

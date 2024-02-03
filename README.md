@@ -18,9 +18,9 @@ Options:
   -o, --output-root <OUTPUT_ROOT>    Output images root
   -f, --fields <FIELDS>              ID fields [default: 0]
   -u, --url-field <URL_FIELD>        URL field [default: -1]
-  -j, --jpeg-quality <JPEG_QUALITY>  Output images jpeg quality [default: 90]
   -m, --max-size <MAX_SIZE>          Output images max size [default: 640]
-  -w, --worker-count <WORKER_COUNT>  Concurrent workers [default: 32]
+  -j, --jpeg-quality <JPEG_QUALITY>  Output images jpeg quality [default: 90]
+  -w, --worker-count <WORKER_COUNT>  Concurrent workers count [default: 32]
   -r, --resume                       Resume last run if any
   -v, --verbose...                   Increase logging verbosity
   -q, --quiet...                     Decrease logging verbosity

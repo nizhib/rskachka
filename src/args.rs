@@ -20,15 +20,15 @@ pub struct Args {
     #[arg(short, long, default_value_t = -1)]
     pub url_field: i8,
 
-    /// Output images jpeg quality
-    #[arg(short, long, default_value_t = 90)]
-    pub jpeg_quality: u8,
-
     /// Output images max size
     #[arg(short, long, default_value_t = 640)]
     pub max_size: u32,
 
-    /// Concurrent workers
+    /// Output images jpeg quality
+    #[arg(short, long, default_value_t = 90)]
+    pub jpeg_quality: u8,
+
+    /// Concurrent workers count
     #[arg(short, long, default_value_t = num_cpus::get() * 2)]
     pub worker_count: usize,
 
