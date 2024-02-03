@@ -1,10 +1,4 @@
-use std::{
-    cmp::max,
-    fs,
-    io::{self, BufWriter},
-    path::Path,
-    sync::atomic::AtomicBool,
-};
+use std::{cmp::max, fs, io::BufWriter, path::Path, sync::atomic::AtomicBool};
 
 use image::{imageops, ImageOutputFormat, RgbaImage};
 use log::info;
@@ -15,7 +9,7 @@ use crate::{abort::return_on_flag, saving::SavingSemaphore};
 #[derive(Error, Debug)]
 pub enum ImagesError {
     #[error("IO error: {0}")]
-    IO(#[from] io::Error),
+    IO(#[from] std::io::Error),
 
     #[error("Image processing error: {0}")]
     Image(#[from] image::ImageError),

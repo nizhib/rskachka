@@ -1,6 +1,6 @@
 mod abort;
 mod args;
-mod fetch;
+mod fetcher;
 mod images;
 mod item;
 mod saving;
@@ -27,7 +27,7 @@ use log::{info, warn, Level};
 use crate::abort::break_on_flag;
 use crate::args::Args;
 use crate::saving::SavingSemaphore;
-use crate::worker::ProcessOptions;
+use crate::worker::Worker;
 
 const BAR_TEMPLATE: &str =
     "{percent:>3}% |{wide_bar}| {human_pos}/{human_len} [{elapsed}<{eta}, {my_per_sec}]";
@@ -116,8 +116,8 @@ fn launch_producer(
     stopped: &Arc<AtomicBool>,
     pb: &Option<ProgressBar>,
 ) {
-    let c_pb = pb.clone();
     let c_stopped = Arc::clone(stopped);
+    let c_pb = pb.clone();
     thread::Builder::new()
         .name("producer".to_string())
         .stack_size(4 * 1024 * 1024)
@@ -146,8 +146,8 @@ fn launch_producer(
 
 fn launch_workers(
     worker_count: usize,
+    args: &Args,
     work_rx: &Receiver<csv::StringRecord>,
-    options: &ProcessOptions,
     stopped: &Arc<AtomicBool>,
     saving: &Arc<SavingSemaphore>,
     pb: &Option<ProgressBar>,
@@ -158,8 +158,9 @@ fn launch_workers(
                 .name(format!("worker{}", i))
                 .stack_size(4 * 1024 * 1024)
                 .spawn_scoped(s, move || {
+                    let worker = Worker::from(args);
                     while let Ok(record) = work_rx.recv() {
-                        if let Err(err) = worker::process(&record, options, stopped, saving) {
+                        if let Err(err) = worker.process(&record, stopped, saving) {
                             warn!("{}", err);
                         }
                         if let Some(pb) = &pb {
@@ -200,14 +201,7 @@ fn main() -> Result<()> {
     launch_producer(index_file, args.no_header, work_tx, &stopped, &pb);
 
     // Launch the workers
-    launch_workers(
-        args.worker_count,
-        &work_rx,
-        &args.into(),
-        &stopped,
-        &saving,
-        &pb,
-    );
+    launch_workers(args.worker_count, &args, &work_rx, &stopped, &saving, &pb);
 
     Ok(())
 }

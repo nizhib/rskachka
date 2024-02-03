@@ -20,6 +20,10 @@ pub struct Args {
     #[arg(short, long, default_value_t = -1)]
     pub url_field: i8,
 
+    /// Timeout for requests, in seconds
+    #[arg(short, long, default_value_t = 5)]
+    pub timeout: u64,
+
     /// Output images max size
     #[arg(short, long, default_value_t = 640)]
     pub max_size: u32,
