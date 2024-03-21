@@ -2,12 +2,10 @@ mod abort;
 mod args;
 mod fetcher;
 mod images;
-mod item;
 mod saving;
 mod worker;
 
 use std::{
-    fmt::Write,
     fs::File,
     io::{BufRead, BufReader, Result},
     process,
@@ -21,16 +19,14 @@ use std::{
 use clap::Parser;
 use clap_verbosity_flag::{LogLevel, Verbosity};
 use crossbeam::channel::{bounded, Receiver, Sender};
-use indicatif::{ProgressBar, ProgressFinish, ProgressState, ProgressStyle};
+use indicatif::ProgressBar;
 use log::{info, warn, Level};
+use rskachka::maybe_create_progressbar;
 
 use crate::abort::break_on_flag;
 use crate::args::Args;
 use crate::saving::SavingSemaphore;
 use crate::worker::Worker;
-
-const BAR_TEMPLATE: &str =
-    "{percent:>3}% |{wide_bar}| {human_pos}/{human_len} [{elapsed}<{eta}, {my_per_sec}]";
 
 fn parse_args() -> Result<Args> {
     let args = Args::parse();
@@ -75,25 +71,6 @@ fn calculate_index_size(file_path: &str, no_header: bool) -> Result<usize> {
     }
     info!("Total entries found: {}", index_size);
     Ok(index_size)
-}
-
-fn create_progressbar(progress: bool, index_size: usize) -> Option<ProgressBar> {
-    if progress {
-        Some(
-            ProgressBar::new(index_size as u64)
-                .with_style(
-                    ProgressStyle::with_template(BAR_TEMPLATE)
-                        .unwrap()
-                        .progress_chars("##-")
-                        .with_key("my_per_sec", |s: &ProgressState, w: &mut dyn Write| {
-                            write!(w, "{:.02}it/s", s.per_sec()).unwrap()
-                        }),
-                )
-                .with_finish(ProgressFinish::AndLeave),
-        )
-    } else {
-        None
-    }
 }
 
 fn set_ctrl_c_handler(stopped: &Arc<AtomicBool>, saving: &Arc<SavingSemaphore>) {
@@ -192,7 +169,7 @@ fn main() -> Result<()> {
     let saving = Arc::new(SavingSemaphore::new());
 
     // Create a progressbar
-    let pb = create_progressbar(args.progress, index_size);
+    let pb = maybe_create_progressbar(args.progress, index_size as u64);
 
     // Gracefully shutdown on Ctrl-C
     set_ctrl_c_handler(&stopped, &saving);

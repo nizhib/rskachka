@@ -10,6 +10,8 @@ cargo install --git https://github.com/nizhib/rskachka
 
 ## 🚀 Usage
 
+### 💾 Download images
+
 ```text
 Usage: rskachka [OPTIONS] -i <INDEX_PATH> -o <OUTPUT_ROOT>
 
@@ -28,4 +30,33 @@ Options:
   -p, --progress                     Show progressbar
   -n, --no-header                    No header in index
   -h, --help                         Print help
+```
+
+### 🕵️ Check missing images
+
+```text
+Usage: missing [OPTIONS] -i <INDEX_PATH> -o <OUTPUT_PATH> -r <ROOT>
+
+Options:
+  -i, --index-path <INDEX_PATH>    Index file path
+  -o, --output-path <OUTPUT_PATH>  Output file path
+  -r, --root <ROOT>                Images root
+  -u, --url-field <URL_FIELD>      URL field [default: -1]
+  -p, --progress                   Show progressbar
+  -h, --help                       Print help
+```
+
+### 🧭 Build an index with image paths
+
+```text
+Usage: index [OPTIONS] -i <INDEX_PATH> -o <OUTPUT_PATH> -r <ROOT>
+
+Options:
+  -i, --index-path <INDEX_PATH>    Index file path
+  -o, --output-path <OUTPUT_PATH>  Output file path
+  -r, --root <ROOT>                Images root
+  -u, --url-field <URL_FIELD>      URL field [default: -1]
+  -n, --no-header                  Skip the first line as header
+  -p, --progress                   Show progressbar
+  -h, --help                       Print help
 ```

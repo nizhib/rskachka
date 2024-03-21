@@ -38,3 +38,9 @@ impl SavingSemaphore {
         }
     }
 }
+
+impl Default for SavingSemaphore {
+    fn default() -> Self {
+        Self::new()
+    }
+}

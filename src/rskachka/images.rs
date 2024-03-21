@@ -1,6 +1,6 @@
-use std::{cmp::max, fs, io::BufWriter, path::Path, sync::atomic::AtomicBool};
+use std::{cmp::max, fs, path::Path, sync::atomic::AtomicBool};
 
-use image::{imageops, ImageOutputFormat, RgbaImage};
+use image::{codecs::jpeg::JpegEncoder, imageops, RgbaImage};
 use log::info;
 use thiserror::Error;
 
@@ -48,19 +48,15 @@ fn save_image(
     jpeg_quality: u8,
     saving: &SavingSemaphore,
 ) -> Result<(), ImagesError> {
-    saving.increment();
-    image
-        .write_to(
-            &mut BufWriter::new(fs::File::create(path).map_err({
-                saving.decrement();
-                ImagesError::IO
-            })?),
-            ImageOutputFormat::Jpeg(jpeg_quality),
-        )
+    let mut encoded = Vec::new();
+    JpegEncoder::new_with_quality(&mut encoded, jpeg_quality)
+        .encode_image(image)
         .map_err({
             saving.decrement();
             ImagesError::Image
         })?;
+    saving.increment();
+    fs::write(path, encoded).map_err(ImagesError::IO)?;
     saving.decrement();
     Ok(())
 }

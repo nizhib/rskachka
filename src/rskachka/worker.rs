@@ -1,14 +1,15 @@
-use std::{fs, path::PathBuf, sync::atomic::AtomicBool, time::Duration};
+use std::{fs, sync::atomic::AtomicBool, time::Duration};
 
 use log::info;
 use thiserror::Error;
+
+use rskachka::{item::Item, item::ParsingError};
 
 use crate::{
     abort::return_on_flag,
     args::Args,
     fetcher::{FetchError, Fetcher},
     images::{save_bytes_as_image, ImagesError},
-    item::{Item, ParsingError},
     saving::SavingSemaphore,
 };
 
@@ -54,15 +55,6 @@ pub enum ProcessError {
     Custom(String),
 }
 
-fn item_to_path(item: &Item, root: &str) -> PathBuf {
-    let hash = format!("{:x}", md5::compute(&item.url));
-    let name = format!("{}.jpg", &hash[..12]);
-    PathBuf::from(root)
-        .join(&name[0..2])
-        .join(&name[2..4])
-        .join(name)
-}
-
 impl Worker {
     pub fn process(
         &self,
@@ -71,19 +63,21 @@ impl Worker {
         saving: &SavingSemaphore,
     ) -> Result<(), ProcessError> {
         // Parse the record into an item
-        let item = Item::from_record(record, &self.fields, self.url_field)
+        let item = Item::from_record(record, &self.fields, self.url_field, &self.output_root)
             .map_err(|e| ProcessError::Custom(format!("Error parsing record: {}", e)))?;
-        let path = item_to_path(&item, &self.output_root);
 
         // Finish if we are resuming and the file exists
-        if path.exists() && self.resume {
+        if item.path.exists() && self.resume {
             info!("Skipping {}", item.url);
             return Ok(());
         }
 
         // Create all subdirectories
-        fs::create_dir_all(path.parent().ok_or_else(|| {
-            ProcessError::Custom(format!("Can't infer parent for {}", path.to_str().unwrap()))
+        fs::create_dir_all(item.path.parent().ok_or_else(|| {
+            ProcessError::Custom(format!(
+                "Can't infer parent for {}",
+                item.path.to_str().unwrap()
+            ))
         })?)
         .map_err(ProcessError::IO)?;
 
@@ -98,7 +92,7 @@ impl Worker {
         return_on_flag!(stopped, || info!("Shutting down..."));
         save_bytes_as_image(
             &bytes,
-            &path,
+            &item.path,
             self.max_size,
             self.jpeg_quality,
             stopped,
