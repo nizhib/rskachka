@@ -19,15 +19,11 @@ pub fn main() -> std::io::Result<()> {
         match record {
             Ok(record) => match Item::from_record(&record, &[0], args.url_field, &args.root) {
                 Ok(item) => {
-                    if item.path.exists() {
-                        continue;
-                    }
-                    match csv_writer.write_record(record.iter()) {
-                        Ok(_) => {}
-                        Err(e) => {
+                    if !item.path.exists() {
+                        if let Err(e) = csv_writer.write_record(record.iter()) {
                             warn!("Error writing record: {}", e);
-                        }
-                    };
+                        };
+                    }
                 }
                 Err(e) => {
                     warn!("Error parsing record: {}", e);
