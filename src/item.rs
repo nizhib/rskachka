@@ -58,7 +58,7 @@ fn url_to_path(url: &str, root: &str) -> PathBuf {
     let name = format!("{}.jpg", &hash[..12]);
     PathBuf::from(root)
         .join(&name[0..2])
-        .join(&name[2..4])
+        .join(&name[0..4])
         .join(name)
 }
 
