@@ -1,6 +1,6 @@
 [package]
 name = "rskachka"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Evgeny Nizhibitsky <nizhib@github.com>"]
 edition = "2021"
 description = "Download images blazingly fast"
@@ -36,3 +36,7 @@ path = "src/rskachka/main.rs"
 [[bin]]
 name = "rsindex"
 path = "src/rsindex/main.rs"
+
+[[bin]]
+name = "rslc"
+path = "src/rslc/main.rs"
