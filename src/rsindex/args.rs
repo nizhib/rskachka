@@ -11,7 +11,7 @@ pub struct Args {
     #[arg(short, long)]
     pub index_path: String,
 
-    /// Missing paths location
+    /// Missing file location
     #[arg(short, long)]
     pub missing_path: String,
 

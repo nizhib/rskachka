@@ -18,8 +18,8 @@ Usage: rskachka [OPTIONS] -i <INDEX_PATH> -o <OUTPUT_ROOT>
 Options:
   -i, --index-path <INDEX_PATH>      Index file path
   -o, --output-root <OUTPUT_ROOT>    Output images root
-  -f, --fields <FIELDS>              ID fields [default: 0]
-  -u, --url-field <URL_FIELD>        URL field [default: -1]
+  -f, --fields <FIELDS>              ID fields indexes [default: 0]
+  -u, --url-field <URL_FIELD>        URL field index [default: -1]
   -t, --timeout <TIMEOUT>            Timeout for requests, in seconds [default: 5]
   -m, --max-size <MAX_SIZE>          Output images max size [default: 640]
   -j, --jpeg-quality <JPEG_QUALITY>  Output images jpeg quality [default: 90]
@@ -32,31 +32,18 @@ Options:
   -h, --help                         Print help
 ```
 
-### 🕵️ Check missing images
+### 🕵️ Build an index and check missing images
 
 ```text
-Usage: missing [OPTIONS] -i <INDEX_PATH> -o <OUTPUT_PATH> -r <ROOT>
+Usage: rsindex [OPTIONS] -i <INDEX_PATH> -o <OUTPUT_PATH> -r <ROOT> [-m <MISSING_PATH>]
 
 Options:
-  -i, --index-path <INDEX_PATH>    Index file path
-  -o, --output-path <OUTPUT_PATH>  Output file path
-  -r, --root <ROOT>                Images root
-  -u, --url-field <URL_FIELD>      URL field [default: -1]
-  -p, --progress                   Show progressbar
-  -h, --help                       Print help
-```
-
-### 🧭 Build an index with image paths
-
-```text
-Usage: index [OPTIONS] -i <INDEX_PATH> -o <OUTPUT_PATH> -r <ROOT>
-
-Options:
-  -i, --index-path <INDEX_PATH>    Index file path
-  -o, --output-path <OUTPUT_PATH>  Output file path
-  -r, --root <ROOT>                Images root
-  -u, --url-field <URL_FIELD>      URL field [default: -1]
-  -n, --no-header                  Skip the first line as header
-  -p, --progress                   Show progressbar
-  -h, --help                       Print help
+  -s, --source-path <SOURCE_PATH>    Source file location
+  -i, --index-path <INDEX_PATH>      Index file location
+  -m, --missing-path <MISSING_PATH>  Missing file location
+  -r, --root <ROOT>                  Images root
+  -u, --url-field <URL_FIELD>        URL field index [default: -1]
+  -n, --no-header                    Skip the first line as header
+  -p, --progress                     Show progressbar
+  -h, --help                         Print help
 ```
