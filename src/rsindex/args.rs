@@ -3,21 +3,29 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[command(about)]
 pub struct Args {
-    /// Index file path
+    /// Source file location
+    #[arg(short, long)]
+    pub source_path: String,
+
+    /// Index file location
     #[arg(short, long)]
     pub index_path: String,
 
-    /// Output file path
+    /// Missing paths location
     #[arg(short, long)]
-    pub output_path: String,
+    pub missing_path: String,
 
     /// Images root
     #[arg(short, long)]
     pub root: String,
 
-    /// URL field
+    /// URL field index
     #[arg(short, long, default_value_t = -1)]
     pub url_field: i8,
+
+    /// Skip the first line as header
+    #[arg(short, long)]
+    pub no_header: bool,
 
     /// Show progressbar
     #[arg(short, long)]

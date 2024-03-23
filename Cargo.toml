@@ -1,6 +1,6 @@
 [package]
 name = "rskachka"
-version = "0.2.1"
+version = "0.3.0"
 authors = ["Evgeny Nizhibitsky <nizhib@github.com>"]
 edition = "2021"
 description = "Download images blazingly fast"
@@ -30,13 +30,9 @@ ureq = "2.9.6"
 url = "2.5.0"
 
 [[bin]]
-name = "index"
-path = "src/index/main.rs"
-
-[[bin]]
-name = "missing"
-path = "src/missing/main.rs"
-
-[[bin]]
 name = "rskachka"
 path = "src/rskachka/main.rs"
+
+[[bin]]
+name = "rsindex"
+path = "src/rsindex/main.rs"

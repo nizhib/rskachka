@@ -12,11 +12,11 @@ pub struct Args {
     #[arg(short, long)]
     pub output_root: String,
 
-    /// ID fields
+    /// ID fields indexes
     #[arg(short, long, value_delimiter = ',', default_values_t = [0])]
     pub fields: Vec<i8>,
 
-    /// URL field
+    /// URL field index
     #[arg(short, long, default_value_t = -1)]
     pub url_field: i8,
 
