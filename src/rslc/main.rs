@@ -1,6 +1,6 @@
 use std::{env::args, fs::File, io::BufReader};
 
-use rskachka::count_lines;
+use rskachka::rslc;
 
 pub fn main() -> std::io::Result<()> {
     for path in args().skip(1) {
@@ -11,7 +11,7 @@ pub fn main() -> std::io::Result<()> {
                 continue;
             }
         };
-        let count = match count_lines(BufReader::new(file)) {
+        let count = match rslc::count_lines(BufReader::new(file)) {
             Ok(lines) => lines,
             Err(e) => {
                 eprintln!("Error reading {}: {}", path, e);

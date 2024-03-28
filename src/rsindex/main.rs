@@ -4,7 +4,7 @@ use std::{fs::File, io::BufReader};
 
 use clap::Parser;
 use log::warn;
-use rskachka::{count_lines, item::Item, maybe_create_progressbar};
+use rskachka::{item::Item, maybe_create_progressbar, rslc};
 
 use crate::args::Args;
 
@@ -18,7 +18,7 @@ pub fn main() -> std::io::Result<()> {
             return Ok(());
         }
     };
-    let source_lines = match count_lines(BufReader::new(source_file)) {
+    let source_lines = match rslc::count_lines(BufReader::new(source_file)) {
         Ok(lines) => lines - if args.no_header { 0 } else { 1 },
         Err(e) => {
             eprintln!("Error reading source lines: {}", e);

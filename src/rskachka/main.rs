@@ -21,7 +21,7 @@ use clap_verbosity_flag::{LogLevel, Verbosity};
 use crossbeam::channel::{bounded, Receiver, Sender};
 use indicatif::ProgressBar;
 use log::{warn, Level};
-use rskachka::{count_lines, maybe_create_progressbar};
+use rskachka::{maybe_create_progressbar, rslc};
 
 use crate::abort::break_on_flag;
 use crate::args::Args;
@@ -57,7 +57,7 @@ fn open_source_file(file_path: &str) -> Result<File> {
 
 fn calculate_source_size(file_path: &str, no_header: bool) -> Result<usize> {
     let source_file = File::open(file_path)?;
-    count_lines(BufReader::new(source_file))
+    rslc::count_lines(BufReader::new(source_file))
         .map(|lines| lines - if no_header { 0 } else { 1 })
         .map_err(|e| {
             std::io::Error::new(
