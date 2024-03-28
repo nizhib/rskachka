@@ -19,7 +19,7 @@ pub fn main() -> std::io::Result<()> {
         }
     };
     let source_lines = match count_lines(BufReader::new(source_file)) {
-        Ok(lines) => lines,
+        Ok(lines) => lines - if args.no_header { 0 } else { 1 },
         Err(e) => {
             eprintln!("Error reading source lines: {}", e);
             return Ok(());
@@ -77,25 +77,27 @@ pub fn main() -> std::io::Result<()> {
 
     for record in source_reader.records() {
         match record {
-            Ok(mut record) => match Item::from_record(&record, &[0], args.url_field, &args.root) {
-                Ok(item) => {
-                    if !item.path.exists() {
-                        if let Some(missing_writer) = &mut missing_writer {
-                            if let Err(e) = missing_writer.write_record(record.iter()) {
-                                warn!("Error adding missing record: {}", e);
+            Ok(mut record) => {
+                match Item::from_record(&record, &[0], args.url_field, &args.output_root) {
+                    Ok(item) => {
+                        if !item.path.exists() {
+                            if let Some(missing_writer) = &mut missing_writer {
+                                if let Err(e) = missing_writer.write_record(record.iter()) {
+                                    warn!("Error adding missing record: {}", e);
+                                };
+                            }
+                        } else {
+                            record.extend([item.path.to_str().unwrap()]);
+                            if let Err(e) = index_writer.write_record(record.iter()) {
+                                warn!("Error adding index record: {}", e);
                             };
                         }
-                    } else {
-                        record.extend([item.path.to_str().unwrap()]);
-                        if let Err(e) = index_writer.write_record(record.iter()) {
-                            warn!("Error adding index record: {}", e);
-                        };
+                    }
+                    Err(e) => {
+                        warn!("Error parsing record: {}", e);
                     }
                 }
-                Err(e) => {
-                    warn!("Error parsing record: {}", e);
-                }
-            },
+            }
             Err(e) => {
                 warn!("Error reading record: {}", e);
             }

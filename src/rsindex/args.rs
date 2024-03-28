@@ -15,15 +15,15 @@ pub struct Args {
     #[arg(short, long)]
     pub missing_path: String,
 
-    /// Images root
+    /// Images output root
     #[arg(short, long)]
-    pub root: String,
+    pub output_root: String,
 
     /// URL field index
     #[arg(short, long, default_value_t = -1)]
     pub url_field: i8,
 
-    /// Skip the first line as header
+    /// Use the first line in source
     #[arg(short, long)]
     pub no_header: bool,
 

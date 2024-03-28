@@ -13,10 +13,10 @@ cargo install --git https://github.com/nizhib/rskachka
 ### 💾 Download images
 
 ```text
-Usage: rskachka [OPTIONS] -i <INDEX_PATH> -o <OUTPUT_ROOT>
+Usage: rskachka [OPTIONS] -i <SOURCE_PATH> -o <OUTPUT_ROOT>
 
 Options:
-  -i, --index-path <INDEX_PATH>      Index file path
+  -s, --source-path <SOURCE_PATH>    Source file location
   -o, --output-root <OUTPUT_ROOT>    Output images root
   -f, --fields <FIELDS>              ID fields indexes [default: 0]
   -u, --url-field <URL_FIELD>        URL field index [default: -1]
@@ -28,22 +28,22 @@ Options:
   -v, --verbose...                   Increase logging verbosity
   -q, --quiet...                     Decrease logging verbosity
   -p, --progress                     Show progressbar
-  -n, --no-header                    No header in index
+  -n, --no-header                    Use the first line in source
   -h, --help                         Print help
 ```
 
-### 🕵️ Build an index and check missing images
+### 👷🕵️ Build an index and check missing images
 
 ```text
-Usage: rsindex [OPTIONS] -i <INDEX_PATH> -o <OUTPUT_PATH> -r <ROOT> [-m <MISSING_PATH>]
+Usage: rsindex [OPTIONS] -s <SOURCE_PATH> -i <INDEX_PATH> -o <OUTPUT_ROOT> [-m <MISSING_PATH>]
 
 Options:
   -s, --source-path <SOURCE_PATH>    Source file location
   -i, --index-path <INDEX_PATH>      Index file location
   -m, --missing-path <MISSING_PATH>  Missing file location
-  -r, --root <ROOT>                  Images root
+  -o, --output-root <OUTPUT_ROOT>    Images output root
   -u, --url-field <URL_FIELD>        URL field index [default: -1]
-  -n, --no-header                    Skip the first line as header
+  -n, --no-header                    Use the first line in source
   -p, --progress                     Show progressbar
   -h, --help                         Print help
 ```

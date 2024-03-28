@@ -7,7 +7,7 @@ mod worker;
 
 use std::{
     fs::File,
-    io::{BufRead, BufReader, Result},
+    io::{BufReader, Result},
     process,
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -20,8 +20,8 @@ use clap::Parser;
 use clap_verbosity_flag::{LogLevel, Verbosity};
 use crossbeam::channel::{bounded, Receiver, Sender};
 use indicatif::ProgressBar;
-use log::{info, warn, Level};
-use rskachka::maybe_create_progressbar;
+use log::{warn, Level};
+use rskachka::{count_lines, maybe_create_progressbar};
 
 use crate::abort::break_on_flag;
 use crate::args::Args;
@@ -46,7 +46,7 @@ fn init_logging<T: LogLevel>(verbose: &Verbosity<T>) {
         .init();
 }
 
-fn open_index_file(file_path: &str) -> Result<File> {
+fn open_source_file(file_path: &str) -> Result<File> {
     File::open(file_path).map_err(|_| {
         std::io::Error::new(
             std::io::ErrorKind::NotFound,
@@ -55,22 +55,16 @@ fn open_index_file(file_path: &str) -> Result<File> {
     })
 }
 
-fn calculate_index_size(file_path: &str, no_header: bool) -> Result<usize> {
-    let index_file = open_index_file(file_path)?;
-
-    info!("Calculating the index size...");
-    let mut index_lines = BufReader::new(index_file).lines();
-    let Ok(mut index_size) = index_lines.try_fold(0, |acc, line| line.map(|_| acc + 1)) else {
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            "Error calculating the index size",
-        ));
-    };
-    if !no_header {
-        index_size -= 1;
-    }
-    info!("Total entries found: {}", index_size);
-    Ok(index_size)
+fn calculate_source_size(file_path: &str, no_header: bool) -> Result<usize> {
+    let source_file = File::open(file_path)?;
+    count_lines(BufReader::new(source_file))
+        .map(|lines| lines - if no_header { 0 } else { 1 })
+        .map_err(|e| {
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("Error reading source lines: {}", e),
+            )
+        })
 }
 
 fn set_ctrl_c_handler(stopped: &Arc<AtomicBool>, saving: &Arc<SavingSemaphore>) {
@@ -87,7 +81,7 @@ fn set_ctrl_c_handler(stopped: &Arc<AtomicBool>, saving: &Arc<SavingSemaphore>) 
 }
 
 fn launch_producer(
-    index_file: File,
+    source_file: File,
     no_header: bool,
     work_tx: Sender<csv::StringRecord>,
     stopped: &Arc<AtomicBool>,
@@ -101,7 +95,7 @@ fn launch_producer(
         .spawn(move || {
             for record in csv::ReaderBuilder::new()
                 .has_headers(!no_header)
-                .from_reader(index_file)
+                .from_reader(source_file)
                 .records()
             {
                 break_on_flag!(c_stopped, || warn!("Shutting down the producer..."));
@@ -157,11 +151,11 @@ fn main() -> Result<()> {
     // Set the log level
     init_logging(&args.verbose);
 
-    // Calculate the index size
-    let index_size = calculate_index_size(&args.index_path, args.no_header)?;
+    // Calculate the source size
+    let source_size = calculate_source_size(&args.source_path, args.no_header)?;
 
-    // Reopen the index file
-    let index_file = open_index_file(&args.index_path)?;
+    // Reopen the source file
+    let source_file = open_source_file(&args.source_path)?;
 
     // Set up the communication
     let (work_tx, work_rx) = bounded::<csv::StringRecord>(args.worker_count);
@@ -169,13 +163,13 @@ fn main() -> Result<()> {
     let saving = Arc::new(SavingSemaphore::new());
 
     // Create a progressbar
-    let pb = maybe_create_progressbar(args.progress, index_size as u64);
+    let pb = maybe_create_progressbar(args.progress, source_size as u64);
 
     // Gracefully shutdown on Ctrl-C
     set_ctrl_c_handler(&stopped, &saving);
 
     // Launch the producer
-    launch_producer(index_file, args.no_header, work_tx, &stopped, &pb);
+    launch_producer(source_file, args.no_header, work_tx, &stopped, &pb);
 
     // Launch the workers
     launch_workers(args.worker_count, &args, &work_rx, &stopped, &saving, &pb);

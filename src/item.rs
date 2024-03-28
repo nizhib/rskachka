@@ -53,10 +53,10 @@ fn normalize_url(url: &str) -> Result<String, ParseError> {
     Url::parse(url).map(|parsed| parsed.to_string())
 }
 
-fn url_to_path(url: &str, root: &str) -> PathBuf {
+fn url_to_path(url: &str, output_root: &str) -> PathBuf {
     let hash = format!("{:x}", md5::compute(url));
     let name = format!("{}.jpg", &hash[..12]);
-    PathBuf::from(root)
+    PathBuf::from(output_root)
         .join(&name[0..2])
         .join(&name[0..4])
         .join(name)
@@ -67,7 +67,7 @@ impl Item {
         record: &csv::StringRecord,
         fields: &[i8],
         url_field: i8,
-        root: &str,
+        output_root: &str,
     ) -> Result<Self, ParsingError> {
         let item_id = match fields.len() {
             0 => "n/a".to_string(),
@@ -75,7 +75,7 @@ impl Item {
         };
         let url = extract_url(record, url_field)?;
         let normalized = normalize_url(&url).map_err(ParsingError::UrlParse)?;
-        let path = url_to_path(&normalized, root);
+        let path = url_to_path(&normalized, output_root);
         Ok(Item {
             id: item_id,
             url: normalized,

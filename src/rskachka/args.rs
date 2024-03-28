@@ -4,9 +4,9 @@ use clap_verbosity_flag::{Verbosity, WarnLevel};
 #[derive(Parser, Debug)]
 #[command(about)]
 pub struct Args {
-    /// Index file path
+    /// Source file location
     #[arg(short, long)]
-    pub index_path: String,
+    pub source_path: String,
 
     /// Output images root
     #[arg(short, long)]
@@ -48,7 +48,7 @@ pub struct Args {
     #[arg(short, long)]
     pub progress: bool,
 
-    /// No header in index
+    /// Use the first line in source
     #[arg(short, long)]
     pub no_header: bool,
 }
