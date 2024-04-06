@@ -1,8 +1,10 @@
-use std::{env::args, fs::File, io::BufReader};
+use std::{env::args, fs::File};
 
+use memmap2::Mmap;
 use rskachka::rslc;
 
 pub fn main() -> std::io::Result<()> {
+    let mut total = 0;
     for path in args().skip(1) {
         let file = match File::open(&path) {
             Ok(file) => file,
@@ -11,14 +13,19 @@ pub fn main() -> std::io::Result<()> {
                 continue;
             }
         };
-        let count = match rslc::count_lines(BufReader::new(file)) {
-            Ok(lines) => lines,
+        let mmap = match unsafe { Mmap::map(&file) } {
+            Ok(mmap) => mmap,
             Err(e) => {
-                eprintln!("Error reading {}: {}", path, e);
+                eprintln!("Error mmaping {}: {}", path, e);
                 continue;
             }
         };
-        println!("{:?} {}", count, path);
+        let count = rslc::count_lines(&mmap);
+        total += count;
+        println!("{} {}", count, path);
+    }
+    if (args().len() - 1) > 1 {
+        println!("{} total", total);
     }
     Ok(())
 }

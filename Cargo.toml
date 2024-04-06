@@ -1,6 +1,6 @@
 [package]
 name = "rskachka"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["Evgeny Nizhibitsky <nizhib@github.com>"]
 edition = "2021"
 description = "Download images blazingly fast"
@@ -23,6 +23,7 @@ image = { version = "0.24.9", default-features = false, features = [
 indicatif = { version = "0.17.8" }
 log = "0.4.21"
 md5 = "0.7.0"
+memmap2 = "0.9.4"
 num_cpus = "1.16.0"
 thiserror = "1.0.58"
 ureq = "2.9.6"

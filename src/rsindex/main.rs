@@ -1,9 +1,10 @@
 mod args;
 
-use std::{fs::File, io::BufReader};
+use std::fs::File;
 
 use clap::Parser;
 use log::warn;
+use memmap2::Mmap;
 use rskachka::{item::Item, maybe_create_progressbar, rslc};
 
 use crate::args::Args;
@@ -18,13 +19,14 @@ pub fn main() -> std::io::Result<()> {
             return Ok(());
         }
     };
-    let source_lines = match rslc::count_lines(BufReader::new(source_file)) {
-        Ok(lines) => lines - if args.no_header { 0 } else { 1 },
+    let source_mmap = match unsafe { Mmap::map(&source_file) } {
+        Ok(mmap) => mmap,
         Err(e) => {
-            eprintln!("Error reading source lines: {}", e);
+            eprintln!("Error mmaping source file: {}", e);
             return Ok(());
         }
     };
+    let source_lines = rslc::count_lines(&source_mmap);
 
     let mut source_reader = csv::ReaderBuilder::new()
         .has_headers(!args.no_header)

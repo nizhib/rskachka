@@ -1,43 +1,31 @@
 use std::{
     cmp::min,
-    io::BufRead,
-    io::Result,
     sync::{
         atomic::{AtomicUsize, Ordering},
-        Arc, Mutex,
+        Arc,
     },
     thread,
 };
 
-const BUFFER_SIZE: usize = 4 * 1024 * 1024;
-const NUM_WORKERS: usize = 2;
+pub fn count_lines(buffer: &[u8]) -> usize {
+    let num_threads = num_cpus::get();
+    let buffer_size = (buffer.len() + num_threads - 1) / num_threads;
 
-pub fn count_lines<R: BufRead + Send>(reader: R) -> Result<usize> {
     let count = Arc::new(AtomicUsize::new(0));
-    let reader = Arc::new(Mutex::new(reader));
-
-    let num_workers = min(num_cpus::get(), NUM_WORKERS);
 
     thread::scope(|s| {
-        for _ in 0..num_workers {
+        for i in 0..num_threads {
             let c_count = Arc::clone(&count);
-            let c_reader = Arc::clone(&reader);
             s.spawn(move || {
-                let mut buf = vec![0u8; BUFFER_SIZE];
-                loop {
-                    let mut reader = c_reader.lock().unwrap();
-                    let size = reader.read(&mut buf).unwrap_or(0);
-                    drop(reader);
-                    if size == 0 {
-                        break;
-                    }
-                    c_count.fetch_add(count_lines_in_buffer(&buf[..size]), Ordering::Relaxed);
-                }
+                let start = i * buffer_size;
+                let end = min((i + 1) * buffer_size, buffer.len());
+                let t_count = count_lines_in_buffer(&buffer[start..end]);
+                c_count.fetch_add(t_count, Ordering::Relaxed);
             });
         }
     });
 
-    Ok(count.load(Ordering::Relaxed))
+    count.load(Ordering::Relaxed)
 }
 
 fn count_lines_in_buffer(buf: &[u8]) -> usize {

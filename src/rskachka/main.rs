@@ -7,7 +7,7 @@ mod worker;
 
 use std::{
     fs::File,
-    io::{BufReader, Result},
+    io::Result,
     process,
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -21,6 +21,7 @@ use clap_verbosity_flag::{LogLevel, Verbosity};
 use crossbeam::channel::{bounded, Receiver, Sender};
 use indicatif::ProgressBar;
 use log::{warn, Level};
+use memmap2::Mmap;
 use rskachka::{maybe_create_progressbar, rslc};
 
 use crate::abort::break_on_flag;
@@ -57,14 +58,8 @@ fn open_source_file(file_path: &str) -> Result<File> {
 
 fn calculate_source_size(file_path: &str, no_header: bool) -> Result<usize> {
     let source_file = File::open(file_path)?;
-    rslc::count_lines(BufReader::new(source_file))
-        .map(|lines| lines - if no_header { 0 } else { 1 })
-        .map_err(|e| {
-            std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
-                format!("Error reading source lines: {}", e),
-            )
-        })
+    let source_mmap = unsafe { Mmap::map(&source_file) }?;
+    Ok(rslc::count_lines(&source_mmap) - if no_header { 0 } else { 1 })
 }
 
 fn set_ctrl_c_handler(stopped: &Arc<AtomicBool>, saving: &Arc<SavingSemaphore>) {
