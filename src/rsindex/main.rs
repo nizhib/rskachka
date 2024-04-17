@@ -68,7 +68,7 @@ pub fn main() -> std::io::Result<()> {
             }
         }
         let mut header = header.to_owned();
-        header.extend(["path"]);
+        header.extend(["image_path"]);
         if let Err(e) = index_writer.write_record(header.iter()) {
             eprintln!("Error adding index header: {}", e);
             return Ok(());
