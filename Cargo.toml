@@ -1,6 +1,6 @@
 [package]
 name = "rskachka"
-version = "0.5.2"
+version = "0.6.0"
 authors = ["Evgeny Nizhibitsky <nizhib@github.com>"]
 edition = "2021"
 description = "Download images blazingly fast"

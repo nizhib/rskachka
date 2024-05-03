@@ -23,6 +23,10 @@ pub struct Args {
     #[arg(short, long, default_value_t = -1)]
     pub url_field: i8,
 
+    /// Concurrent workers count
+    #[arg(short, long, default_value_t = num_cpus::get() * 2)]
+    pub worker_count: usize,
+
     /// Use the first line in source
     #[arg(short, long)]
     pub no_header: bool,
