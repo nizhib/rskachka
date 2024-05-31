@@ -78,6 +78,7 @@ fn launch_saver(
 fn launch_workers(
     url_field: i8,
     output_root: &str,
+    extension: &str,
     work_rx: &Receiver<InputRecord>,
     save_tx: &Sender<OutputRecord>,
 ) {
@@ -87,7 +88,7 @@ fn launch_workers(
                 .name(format!("worker{}", i))
                 .spawn_scoped(s, move || {
                     while let Ok(mut record) = work_rx.recv() {
-                        match Item::from_record(&record, &[0], url_field, output_root) {
+                        match Item::from_record(&record, &[0], url_field, output_root, extension) {
                             Ok(item) => {
                                 if item.path.exists() {
                                     record.extend([item.path.to_str().unwrap()]);
@@ -205,7 +206,13 @@ pub fn main() -> std::io::Result<()> {
     launch_saver(index_writer, missing_writer, save_rx);
 
     // Launch the workers
-    launch_workers(args.url_field, &args.output_root, &work_rx, &save_tx);
+    launch_workers(
+        args.url_field,
+        &args.output_root,
+        &args.extension,
+        &work_rx,
+        &save_tx,
+    );
 
     Ok(())
 }

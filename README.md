@@ -22,7 +22,8 @@ Options:
   -u, --url-field <URL_FIELD>        URL field index [default: -1]
   -t, --timeout <TIMEOUT>            Timeout for requests, in seconds [default: 5]
   -m, --max-size <MAX_SIZE>          Output images max size [default: 640]
-  -j, --jpeg-quality <JPEG_QUALITY>  Output images jpeg quality [default: 90]
+  -e, --extension <EXTENSION>        Output images extension [default: webp]
+  -q, --quality <QUALITY>            Output images quality [default: 92]
   -w, --worker-count <WORKER_COUNT>  Concurrent workers count [default: 32]
   -r, --resume                       Resume last run if any
   -v, --verbose...                   Increase logging verbosity
@@ -42,6 +43,7 @@ Options:
   -i, --index-path <INDEX_PATH>      Index file location
   -m, --missing-path <MISSING_PATH>  Missing file location
   -o, --output-root <OUTPUT_ROOT>    Images output root
+  -e, --extension <EXTENSION>        Images extension [default: webp]
   -u, --url-field <URL_FIELD>        URL field index [default: -1]
   -n, --no-header                    Use the first line in source
   -p, --progress                     Show progressbar

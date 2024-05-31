@@ -1,5 +1,7 @@
 use clap::Parser;
 
+const DEFAULT_EXTENSION: &str = "webp";
+
 #[derive(Parser, Debug)]
 #[command(about)]
 pub struct Args {
@@ -18,6 +20,10 @@ pub struct Args {
     /// Images output root
     #[arg(short, long)]
     pub output_root: String,
+
+    /// Images extension
+    #[arg(short, long, default_value_t = DEFAULT_EXTENSION.to_string())]
+    pub extension: String,
 
     /// URL field index
     #[arg(short, long, default_value_t = -1)]

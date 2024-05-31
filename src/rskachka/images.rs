@@ -1,6 +1,12 @@
 use std::{cmp::max, fs, io::BufWriter, path::Path, sync::atomic::AtomicBool};
 
-use image::{imageops, ImageOutputFormat, RgbaImage};
+use image::{
+    codecs::{
+        jpeg::JpegEncoder,
+        webp::{WebPEncoder, WebPQuality},
+    },
+    imageops, RgbaImage,
+};
 use log::info;
 use thiserror::Error;
 
@@ -42,25 +48,37 @@ fn remove_transparency(image: &mut RgbaImage) {
     });
 }
 
+#[allow(deprecated)]
 fn save_image(
     image: &RgbaImage,
     path: &Path,
-    jpeg_quality: u8,
+    extension: &str,
+    quality: u8,
     saving: &SavingSemaphore,
 ) -> Result<(), ImagesError> {
     saving.increment();
-    image
-        .write_to(
-            &mut BufWriter::new(fs::File::create(path).map_err({
+    let mut writer = BufWriter::new(fs::File::create(path).map_err({
+        saving.decrement();
+        ImagesError::IO
+    })?);
+    match extension {
+        "webp" => image
+            .write_with_encoder(WebPEncoder::new_with_quality(
+                &mut writer,
+                WebPQuality::lossy(quality),
+            ))
+            .map_err({
                 saving.decrement();
-                ImagesError::IO
-            })?),
-            ImageOutputFormat::Jpeg(jpeg_quality),
-        )
-        .map_err({
-            saving.decrement();
-            ImagesError::Image
-        })?;
+                ImagesError::Image
+            })?,
+        "jpg" => image
+            .write_with_encoder(JpegEncoder::new_with_quality(&mut writer, quality))
+            .map_err({
+                saving.decrement();
+                ImagesError::Image
+            })?,
+        _ => panic!("Unsupported extension: {}", extension),
+    }
     saving.decrement();
     Ok(())
 }
@@ -69,7 +87,8 @@ pub fn save_bytes_as_image(
     bytes: &[u8],
     path: &Path,
     max_size: u32,
-    jpeg_quality: u8,
+    extension: &str,
+    quality: u8,
     stopped: &AtomicBool,
     saving: &SavingSemaphore,
 ) -> Result<(), ImagesError> {
@@ -87,5 +106,5 @@ pub fn save_bytes_as_image(
     remove_transparency(&mut image);
 
     return_on_flag!(stopped, || info!("Shutting down..."));
-    save_image(&image, path, jpeg_quality, saving)
+    save_image(&image, path, extension, quality, saving)
 }

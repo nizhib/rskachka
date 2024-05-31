@@ -19,7 +19,8 @@ pub struct Worker {
     fields: Vec<i8>,
     url_field: i8,
     max_size: u32,
-    jpeg_quality: u8,
+    extension: String,
+    quality: u8,
     resume: bool,
 }
 
@@ -31,7 +32,8 @@ impl From<&Args> for Worker {
             fields: args.fields.clone(),
             url_field: args.url_field,
             max_size: args.max_size,
-            jpeg_quality: args.jpeg_quality,
+            extension: args.extension.clone(),
+            quality: args.quality,
             resume: args.resume,
         }
     }
@@ -63,8 +65,14 @@ impl Worker {
         saving: &SavingSemaphore,
     ) -> Result<(), ProcessError> {
         // Parse the record into an item
-        let item = Item::from_record(record, &self.fields, self.url_field, &self.output_root)
-            .map_err(|e| ProcessError::Custom(format!("Error parsing record: {}", e)))?;
+        let item = Item::from_record(
+            record,
+            &self.fields,
+            self.url_field,
+            &self.output_root,
+            &self.extension,
+        )
+        .map_err(|e| ProcessError::Custom(format!("Error parsing record: {}", e)))?;
 
         // Finish if we are resuming and the file exists
         if item.path.exists() && self.resume {
@@ -94,7 +102,8 @@ impl Worker {
             &bytes,
             &item.path,
             self.max_size,
-            self.jpeg_quality,
+            &self.extension,
+            self.quality,
             stopped,
             saving,
         )

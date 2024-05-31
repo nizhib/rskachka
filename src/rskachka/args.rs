@@ -1,6 +1,8 @@
 use clap::Parser;
 use clap_verbosity_flag::{Verbosity, WarnLevel};
 
+const DEFAULT_EXTENSION: &str = "webp";
+
 #[derive(Parser, Debug)]
 #[command(about)]
 pub struct Args {
@@ -28,9 +30,13 @@ pub struct Args {
     #[arg(short, long, default_value_t = 640)]
     pub max_size: u32,
 
-    /// Output images jpeg quality
-    #[arg(short, long, default_value_t = 90)]
-    pub jpeg_quality: u8,
+    /// Output images extension
+    #[arg(short, long, default_value_t = DEFAULT_EXTENSION.to_string())]
+    pub extension: String,
+
+    /// Output images quality
+    #[arg(short, long, default_value_t = 92)]
+    pub quality: u8,
 
     /// Concurrent workers count
     #[arg(short, long, default_value_t = num_cpus::get() * 2)]
